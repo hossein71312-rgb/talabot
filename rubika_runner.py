@@ -64,9 +64,14 @@ def send(text):
     body = json.dumps({"chat_id": CHAT, "text": text}).encode()
     req = urllib.request.Request(url, body, {"Content-Type": "application/json"})
     try:
-        urllib.request.urlopen(req, timeout=20).read()
+        print("[SEND]", urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")[:200])
     except Exception as e:
         print("[SEND-ERR]", e)
+
+
+if os.environ.get("SEND_TEST") == "true":
+    send("✅ پیام آزمایشی ربات طلا؛ اتصال به کانال برقرار است.")
+    sys.exit(0)
 
 
 def load_stats():
