@@ -12,15 +12,22 @@ CLOSED = ("TP1_HIT", "STOPPED", "EXPIRED", "CANCELLED_TP_FIRST",
 
 
 def find_analyzer():
-    for p in sorted(glob.glob(os.path.join(HERE, "*.py"))):
-        if os.path.basename(p) == "rubika_runner.py":
-            continue
-        try:
-            if "XAUUSD ANALYZER" in open(p, encoding="utf-8").read():
+    seen = []
+    for root, dirs, files in os.walk(HERE):
+        dirs[:] = [d for d in dirs if not d.startswith(".") and d != "state"]
+        for f in sorted(files):
+            if not f.endswith(".py") or f == "rubika_runner.py":
+                continue
+            p = os.path.join(root, f)
+            seen.append(os.path.relpath(p, HERE))
+            try:
+                t = open(p, encoding="utf-8", errors="ignore").read()
+            except Exception:
+                continue
+            if "def run_once" in t and "def dispatch_final_verdict" in t:
                 return p
-        except Exception:
-            pass
-    sys.exit("فایل تحلیلگر XAUUSD پیدا نشد")
+    print("فایل‌های py دیده‌شده:", seen or "هیچ")
+    sys.exit("فایل تحلیلگر پیدا نشد؛ فایل کامل ربات طلا (.py) را در مخزن آپلود کن")
 
 
 spec = importlib.util.spec_from_file_location("analyzer", find_analyzer())
@@ -83,6 +90,7 @@ def fmt_signal(sg, side, now):
             f"هدف ۱: {sg['tp1']:.2f}\n"
             f"هدف ۲: {sg['tp2']:.2f}\n\n"
             f"⏰ ساعت تهران {t} | اعتبار {mod.SIGNAL_TTL_MINUTES} دقیقه\n"
+            f"📡 منبع قیمت: {getattr(mod, 'SOURCE_NAME', '')}\n"
             f"⚠️ فقط راهنما؛ مسئولیت معامله با خودتان است.")
 
 
